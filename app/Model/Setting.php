@@ -43,7 +43,7 @@ class Setting extends AppModel {
 			$this->data[$this->alias]['convert_from'] .= 'ogg,';
 		}
 		// On force la conversion des fichiers AAC, FLAC et WMA
-		$this->data[$this->alias]['convert_from'] .= 'aac,flac,wma';
+		$this->data[$this->alias]['convert_from'] .= 'aac,flac,wma,m4a,mp4';
 		return true;
 	}
 

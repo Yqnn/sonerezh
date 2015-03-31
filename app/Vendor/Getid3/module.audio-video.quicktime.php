@@ -171,7 +171,7 @@ class getid3_quicktime extends getid3_handler
 		// http://developer.apple.com/techpubs/quicktime/qtdevdocs/APIREF/INDEX/atomalphaindex.htm
 
 		$info = &$this->getid3->info;
-
+		$atomname = utf8_encode($atomname);
 		//$atom_parent = array_pop($atomHierarchy);
 		$atom_parent = end($atomHierarchy); // http://www.getid3.org/phpBB3/viewtopic.php?t=1717
 		array_push($atomHierarchy, $atomname);
