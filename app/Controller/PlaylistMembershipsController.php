@@ -54,7 +54,7 @@ class PlaylistMembershipsController extends AppController {
                 $order = array('Song.band', 'Song.album', 'Song.disc+0', 'Song.track_number');
 
                 if (isset($this->request->data['album'])) { //It's an album !
-                    $conditions['Song.album'] = $this->request->data['album'];
+                    $conditions = array('Song.album' => $this->request->data['album']);
                     $order = array('Song.album', 'Song.disc+0', 'Song.track_number');
                 }
 

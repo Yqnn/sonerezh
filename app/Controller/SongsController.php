@@ -30,7 +30,9 @@ class SongsController extends AppController{
                 $newSong['title'] = $songInfo['comments']['title'][0];
             }
 
-            if (isset($songInfo['comments']['artist']) && !empty($songInfo['comments']['artist'])) {
+            if (isset($songInfo['comments']['album_artist']) && !empty($songInfo['comments']['album_artist'])) {
+                $newSong['artist'] = $songInfo['comments']['album_artist'][0];
+            } else if (isset($songInfo['comments']['artist']) && !empty($songInfo['comments']['artist'])) {
                 $newSong['artist'] = $songInfo['comments']['artist'][0];
             } else {
                 $newSong['artist'] = 'Unknown Artist';
@@ -181,7 +183,7 @@ class SongsController extends AppController{
         $songs = $this->Song->find('all', array(
                 'fields'        => array('Song.id', 'Song.title', 'Song.album', 'Song.artist', 'Song.band', 'Song.playtime', 'Song.track_number', 'Song.year', 'Song.disc'),
                 'conditions'    => array('Song.band' => $band, 'Song.album' => $album),
-                'order'         => $this->Song->order
+                'order'         => $this->Song->albumOrder
             )
         );
         $parsed = array();
