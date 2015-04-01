@@ -152,15 +152,24 @@ class SongsController extends AppController{
             'conditions'    => array('user_id' => AuthComponent::user('id'))
         ));
 
-        $this->Paginator->settings = array(
-            'Song' => array(
-                'limit'         => 36,
-                'fields'        => array('Song.band', 'Song.album', 'Song.cover'),
-                'order'         => $this->Song->albumOrder,
-                'group'         => 'Song.album'
-            )
-        );
-        $songs = $this->Paginator->paginate();
+        $array = array();
+        foreach($this->Song->find('all', array('fields'=>array('Song.album', 'Song.band','Song.cover'))) as $song) {
+            $song = $song['Song'];
+            if(!isset($array[$song['album']])) {
+                $array[$song['album']] = array('band'=>$song['band']);
+            }
+            if($song['band'] != $array[$song['album']]['band']) {
+                $array[$song['album']]['band'] = 'Various artists';
+            }
+            if(isset($song['cover'])) {
+                $array[$song['album']]['cover'] = $song['cover'];
+            }
+        }
+        ksort($array);
+        $songs = array();
+        foreach($array as $album => $data) {
+            $songs[] = array('Song'=>array('band'=>$data['band'],'album'=>$album,'cover'=>$data['cover']));
+        }
 
         foreach ($songs as &$song) {
             $song['Song']['cover'] = empty($song['Song']['cover']) ? "no-cover.png" : THUMBNAILS_DIR.$song['Song']['cover'];
@@ -182,7 +191,7 @@ class SongsController extends AppController{
         $album = $this->request->query('album');
         $songs = $this->Song->find('all', array(
                 'fields'        => array('Song.id', 'Song.title', 'Song.album', 'Song.artist', 'Song.band', 'Song.playtime', 'Song.track_number', 'Song.year', 'Song.disc'),
-                'conditions'    => array('Song.band' => $band, 'Song.album' => $album),
+                'conditions'    => array('Song.album' => $album),
                 'order'         => $this->Song->albumOrder
             )
         );
