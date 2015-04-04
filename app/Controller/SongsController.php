@@ -148,8 +148,15 @@ class SongsController extends AppController {
             $songs = array_merge($songs, $dir->findRecursive('^.*\.(mp3|ogg|flac|aac|m4a|mp4)$'));
         }
 
+        $songs_filtered = array();
+        foreach($songs as $song) {
+            if(strpos($song,'/.') === false) {
+                $songs_filtered[] = $song;
+            }
+        }
+
         $existingSongs = $this->Song->find('list', array('fields' => array('id', 'source_path')));
-        $new = array_merge(array_diff($songs, $existingSongs));
+        $new = array_merge(array_diff($songs_filtered, $existingSongs));
         //$deleted = array_diff($existingSongs, $songs);
         $this->set('songs', json_encode($new));
     }
@@ -177,8 +184,14 @@ class SongsController extends AppController {
             if(isset($song['cover'])) {
                 $array[$song['album']]['cover'] = $song['cover'];
             }
+            $array[$song['album']]['album'] = $song['album'];
         }
-        ksort($array);
+        uasort($array, function($a, $b ) {
+            if($a['band'] === $b['band']) return strcmp(strtolower($a['album']),strtolower($b['album']));
+            if($a['band'] === 'Various artists') return 1;
+            if($b['band'] === 'Various artists') return -1;
+            return strcmp(strtolower($a['band']),strtolower($b['band']));
+        });
         $songs = array();
         foreach($array as $album => $data) {
             $songs[] = array('Song'=>array('band'=>$data['band'],'album'=>$album,'cover'=>$data['cover']));
