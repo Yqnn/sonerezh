@@ -5,7 +5,7 @@ App::uses("AppController", "Controller");
 /**
  * @property Song $Song
  */
-class SongsController extends AppController{
+class SongsController extends AppController {
 
     /**
      * Extract and import metadata in database.
@@ -14,7 +14,7 @@ class SongsController extends AppController{
      * @link http://getid3.sourceforge.net/
      * @see SongsController::import
      */
-    public function ajax_import(){
+    public function ajax_import() {
         App::import('Vendor', 'Getid3/getid3');
         App::uses('Folder', 'Utility');
 
@@ -26,46 +26,54 @@ class SongsController extends AppController{
 
         // Parse file metadata to $newSong array.
         if (isset($songInfo['comments'])) {
-            if (isset($songInfo['comments']['title'])) {
-                $newSong['title'] = $songInfo['comments']['title'][0];
+            if (!empty($songInfo['comments']['title'])) {
+                $title_array_length = count($songInfo['comments']['title']);
+                $newSong['title'] = $songInfo['comments']['title'][$title_array_length - 1];
+            } else {
+                $newSong['title'] = 'Unknown Title';
             }
 
             if (isset($songInfo['comments']['album_artist']) && !empty($songInfo['comments']['album_artist'])) {
-                $newSong['artist'] = $songInfo['comments']['album_artist'][0];
+                $artist_array_length = count($songInfo['comments']['album_artist']);
+                $newSong['artist'] = $songInfo['comments']['album_artist'][$artist_array_length - 1];
             } else if (isset($songInfo['comments']['artist']) && !empty($songInfo['comments']['artist'])) {
-                $newSong['artist'] = $songInfo['comments']['artist'][0];
+                $artist_array_length = count($songInfo['comments']['artist']);
+                $newSong['artist'] = $songInfo['comments']['artist'][$artist_array_length - 1];
             } else {
                 $newSong['artist'] = 'Unknown Artist';
             }
 
-            if (isset($songInfo['comments']['band'])) {
-                $newSong['band'] = $songInfo['comments']['band'][0];
+            if (!empty($songInfo['comments']['band'])) {
+                $band_array_length = count($songInfo['comments']['band']);
+                $newSong['band'] = $songInfo['comments']['band'][$band_array_length - 1];
             }
 
-            if (isset($songInfo['comments']['album']) && !empty($songInfo['comments']['album'])) {
-                $newSong['album'] = $songInfo['comments']['album'][count($songInfo['comments']['album']) - 1];
+            if (!empty($songInfo['comments']['album'])) {
+                $album_array_length = count($songInfo['comments']['album']);
+                $newSong['album'] = $songInfo['comments']['album'][$album_array_length - 1];
             } else {
                 $newSong['album'] = 'Unknown Album';
             }
 
-            if (isset($songInfo['comments']['track_number']) && intval($songInfo['comments']['track_number'][0])) {
+            if (!empty($songInfo['comments']['track_number'])) {
                 $newSong['track_number'] = $songInfo['comments']['track_number'][0];
             }
 
-            if (isset($songInfo['playtime_string'])) {
+            if (!empty($songInfo['playtime_string'])) {
                 $newSong['playtime'] = $songInfo['playtime_string'];
             }
 
-            if (isset($songInfo['comments']['year'])) {
+            if (!empty($songInfo['comments']['year'])) {
                 $newSong['year'] = $songInfo['comments']['year'][0];
             }
 
-            if (isset($songInfo['comments']['part_of_a_set'])) {
+            if (!empty($songInfo['comments']['part_of_a_set'])) {
                 $newSong['disc'] = $songInfo['comments']['part_of_a_set'][0];
             }
 
-            if (isset($songInfo['comments']['genre'])){
-                $newSong['genre'] = $songInfo['comments']['genre'][0];
+            if (!empty($songInfo['comments']['genre'])){
+                $genre_array_length = count($songInfo['comments']['genre']);
+                $newSong['genre'] = $songInfo['comments']['genre'][$genre_array_length - 1];
             }
 
             if (isset($songInfo['comments']['picture'])) {
@@ -112,13 +120,13 @@ class SongsController extends AppController{
      * The import view function.
      * The function does the following action:
      *      - Check the root path,
-     *      - Search every media files (mp3, ogg, flac, wma, aac) to load them in an array
+     *      - Search every media files (mp3, ogg, flac, aac) to load them in an array
      *      - Compare this array with the list of existing songs to keep only new tracks
      *      - Pass this array to the view.
      *
      * @see SongsController::ajax_import
      */
-    public function import(){
+    public function import() {
         App::uses('Folder', 'Utility');
 
         $this->loadModel('Setting');
@@ -126,26 +134,31 @@ class SongsController extends AppController{
         $settings = $this->Setting->find('first');
 
         if ($settings) {
-            $path = $settings['Setting']['rootpath'];
+            $paths = explode(';', $settings['Setting']['rootpath']);
         } else {
             $path = false;
             $this->Session->setFlash(__('Please define a root path.'), 'flash_error');
             $this->redirect(array('controller' => 'settings', 'action' => 'index'));
         }
 
-        $dir = new Folder($path);
-        $songs = $dir->findRecursive('^.*\.(mp3|ogg|flac|wma|aac|m4a|mp4)$');
+        $songs = array();
+
+        foreach ($paths as $path) {
+            $dir = new Folder($path);
+            $songs = array_merge($songs, $dir->findRecursive('^.*\.(mp3|ogg|flac|aac|m4a|mp4)$'));
+        }
+
         $existingSongs = $this->Song->find('list', array('fields' => array('id', 'source_path')));
         $new = array_merge(array_diff($songs, $existingSongs));
-        $deleted = array_diff($existingSongs, $songs);
-        $this->set('songs',json_encode($new));
+        //$deleted = array_diff($existingSongs, $songs);
+        $this->set('songs', json_encode($new));
     }
 
     /**
      * The albums view function.
      * Find songs in the database, alphabetically and grouped by album.
      */
-    public function albums(){
+    public function albums() {
         $this->loadModel('Playlist');
         $playlists = $this->Playlist->find('list', array(
             'fields'        => array('Playlist.id', 'Playlist.title'),
@@ -186,7 +199,7 @@ class SongsController extends AppController{
      * Get album content.
      * This function is called when you click on a cover from the albums view.
      */
-    public function album(){
+    public function album() {
         $band = $this->request->query('band');
         $album = $this->request->query('album');
         $songs = $this->Song->find('all', array(
@@ -214,7 +227,7 @@ class SongsController extends AppController{
      * The artists view function.
      * Generate a list of 5 bands, in alphabetical order. This list is then read to find all the songs of each band, grouped by album and disc.
      */
-    public function artists(){
+    public function artists() {
         $this->loadModel('Playlist');
         $this->Playlist->recursive = 0;
         $playlists = $this->Playlist->find('list', array(
@@ -288,7 +301,7 @@ class SongsController extends AppController{
      * The index view function
      * Get songs from database, ordered by artist.
      */
-    public function index(){
+    public function index() {
         $this->Paginator->settings = array(
             'Song' => array(
                 'limit'     => 50,
@@ -316,7 +329,7 @@ class SongsController extends AppController{
      * Search view function
      * We just make a MySQL request...
      */
-    public function search(){
+    public function search() {
         $query = isset($this->request->query['q']) ? $this->request->query['q'] : false ;
 
         if ($query) {
@@ -394,7 +407,13 @@ class SongsController extends AppController{
             }
             $this->set('songs', $parsed);
         }
-        $this->set('query', $query);
+
+        $this->loadModel('Playlist');
+        $playlists = $this->Playlist->find('list', array(
+            'fields'        => array('Playlist.id', 'Playlist.title'),
+            'conditions'    => array('user_id' => AuthComponent::user('id'))
+        ));
+        $this->set(compact('query', 'playlists'));
     }
 
     /**
@@ -404,7 +423,7 @@ class SongsController extends AppController{
      * @param null $id
      * @return CakeResponse audio file
      */
-    public function download($id = null){
+    public function download($id = null) {
         $this->loadModel('Setting');
         $settings = $this->Setting->find('first');
 
@@ -415,24 +434,27 @@ class SongsController extends AppController{
 
         if (empty($song['Song']['path'])) {
             $file_extension = substr(strrchr($song['Song']['source_path'], "."), 1);
-        }else {
+        } else {
             $file_extension = substr(strrchr($song['Song']['path'], "."), 1);
         }
 
         if (empty($song['Song']['path']) || $file_extension != $settings['Setting']['convert_to']) {
             if (in_array($file_extension, explode(',', $settings['Setting']['convert_from']))) {
                 $bitrate = $settings['Setting']['quality'];
-
+                $avconv = "ffmpeg";
+                if(shell_exec("which avconv")){
+                    $avconv = "avconv";
+                }
                 if ($settings['Setting']['convert_to'] == 'mp3') {
                     $path = TMP.date('YmdHis').".mp3";
                     $song['Song']['path'] = $path;
-                    passthru('avconv -i "'.$song['Song']['source_path'].'" -threads 4  -c:a libmp3lame -b:a '.$bitrate.'k "'.$path.'"');
+                    passthru($avconv.' -i "'.$song['Song']['source_path'].'" -threads 4  -c:a libmp3lame -b:a '.$bitrate.'k "'.$path.'" 2>&1');
                 } else if ($settings['Setting']['convert_to'] == 'ogg'){
                     $path = TMP.date('YmdHis').".ogg";
                     $song['Song']['path'] = $path;
-                    passthru('avconv -i "'.$song['Song']['source_path'].'" -threads 4  -c:a libvorbis -b:a '.$bitrate.'k "'.$path.'"');
+                    passthru($avconv.' -i "'.$song['Song']['source_path'].'" -threads 4  -c:a libvorbis -b:a '.$bitrate.'k "'.$path.'" 2>&1');
                 }
-            } else if(empty($song['Song']['path'])) {
+            } else if (empty($song['Song']['path'])) {
                 $song['Song']['path'] = $song['Song']['source_path'];
             }
 
@@ -516,8 +538,4 @@ class SongsController extends AppController{
         $this->render(false);
         echo json_encode($songs);
     }
-
-    # ------------------------- Sonerezh API ------------------------- #
-
-
 }

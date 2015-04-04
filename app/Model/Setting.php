@@ -30,10 +30,16 @@ class Setting extends AppModel {
 				'rule'			=> array('convConflicts'),
 				'message'		=> "Wrong conversion destination! Make sure you are not trying to convert MP3 to MP3, or OGG to OGG."
 			)
-		)
+		),
+        'enable_mail_notification'	=> array(
+            'boolean'			=> array(
+                'rule'				=> array('boolean'),
+                'message'			=> 'Something went wrong!'
+            )
+        )
 	);
 
-	public function beforeSave($options = array()){
+	public function beforeSave($options = array()) {
 		// On place les fichiers à convertir dans ['convert_from']
 		$this->data[$this->alias]['convert_from'] = '';
 		if (isset($this->data[$this->alias]['from_mp3']) && $this->data[$this->alias]['from_mp3']) {
@@ -43,32 +49,38 @@ class Setting extends AppModel {
 			$this->data[$this->alias]['convert_from'] .= 'ogg,';
 		}
 		// On force la conversion des fichiers AAC, FLAC et WMA
-		$this->data[$this->alias]['convert_from'] .= 'aac,flac,wma,m4a,mp4';
+		$this->data[$this->alias]['convert_from'] .= 'aac,flac,m4a,mp4';
 		return true;
 	}
 
-	public function convConflicts($options = array()){
+	public function convConflicts($options = array()) {
 		// On s'assure que l'utilisateur n'a pas choisis MP3 -> MP3 ou OGG -> OGG
-		if($this->data[$this->alias]['from_mp3'] && $this->data[$this->alias]['convert_to'] == 'mp3'){
+		if ($this->data[$this->alias]['from_mp3'] && $this->data[$this->alias]['convert_to'] == 'mp3') {
 			return false;
 		}
-		if($this->data[$this->alias]['from_ogg'] && $this->data[$this->alias]['convert_to'] == 'ogg'){
+		if ($this->data[$this->alias]['from_ogg'] && $this->data[$this->alias]['convert_to'] == 'ogg') {
 			return false;
 		}
 		return true;
 	}
 
-	public function pathExists($options = array()){
-		if (!file_exists($this->data[$this->alias]['rootpath'])) {
-			return false;
-		}
+	public function pathExists($options = array()) {
+        $paths = explode(';', $this->data[$this->alias]['rootpath']);
+        foreach ($paths as $path) {
+            if (!file_exists($path)) {
+                return false;
+            }
+        }
 		return true;
 	}
 
 	public function isReadable($options = array()) {
-		if (!is_readable($this->data[$this->alias]['rootpath'])) {
-			return false;
-		}
+        $paths = explode(';', $this->data[$this->alias]['rootpath']);
+        foreach ($paths as $path) {
+            if (!is_readable($path)) {
+                return false;
+            }
+        }
 		return true;
 	}
 }

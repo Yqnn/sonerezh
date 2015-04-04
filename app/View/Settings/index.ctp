@@ -18,9 +18,44 @@
             <?php
             echo $this->Form->create('Setting');
             echo $this->Form->input('id');
-            echo $this->Form->input('rootpath', array('label' => __('Music root directory'), 'placeholder' => __('Music root directory')));
             ?>
-            <span class=" offs help-block"><?php echo __('Make sure Sonerezh can read this folder recursively.'); ?></span>
+            <label for="SettingRootPath">
+                <?php echo __('Music root directory'); ?>
+            </label>
+            <div id="root-path-input-group" class="input-group">
+                <?php
+                echo $this->Form->input('rootpath', array(
+                    'type'  => 'text',
+                    'label' => false,
+                    'div'   => false,
+                    'placeholder' => __('Music root directory'),
+                    'after' => '<span class="input-group-btn"><button type="button" id="add-root-path-field" class="btn btn-primary"><i class="glyphicon glyphicon-plus"></i></button></span>'
+                ));
+                ?>
+            </div>
+            <small>
+                <?php echo '<span class="help-block">Make sure Sonerezh can read this folder recursively. Current App folder is: '.APP.'</span>'; ?>
+            </small>
+            <?php
+
+            echo $this->Form->input('enable_mail_notification', array(
+                'type'  => 'checkbox',
+                'label' => __('Enable mail notifications.'),
+            ));
+            ?>
+
+            <small>
+                <span class="help-block">
+                    <?php echo __('Sonerezh can send an email on users creation to notify them.'); ?>
+                    <?php echo $this->Html->link(
+                        '<i class="glyphicon glyphicon-question-sign"></i>',
+                        'https://www.sonerezh.bzh/docs/en/configuration.html#enable-mail-notification',
+                        array('escape' => false, 'target' => 'blank', 'class' => 'no-ajax')
+                    ); ?>
+                </span>
+            </small>
+
+
             <div class="panel <?php echo $avconv ? 'panel-default' : 'panel-danger'; ?>">
                 <div class="panel-heading">
                     <h4 class="panel-title"><?php echo __('Automatic tracks conversion'); ?>
@@ -43,7 +78,6 @@
                                 <?php echo $this->Form->input('from_ogg', array('type' => 'checkbox', 'label' => 'Ogg Vorbis (OGG)')); ?>
                                 <?php echo $this->Form->input('from_aac', array('type' => 'checkbox', 'label' => 'Advanced Audio Coding (AAC)', 'disabled' => 'disabled', 'checked' => 'checked')); ?>
                                 <?php echo $this->Form->input('from_flac', array('type' => 'checkbox', 'label' => 'Free Lossless Audio Codec (FLAC)', 'disabled' => 'disabled', 'checked' => 'checked')); ?>
-                                <?php echo $this->Form->input('from_wma', array('type' => 'checkbox', 'label' => 'Windows Media Audio (WMA)', 'disabled' => 'disabled', 'checked' => 'checked')); ?>
                             </div>
                             <div class="col-xs-6">
                                 <h5><strong><?php echo __('Destination format'); ?></strong></h5>
@@ -51,7 +85,7 @@
                                 <h5><strong><?php echo __('Quality'); ?></strong></h5>
                                 <?php echo $this->Form->input('quality', array('type' => 'hidden'));?>
                                 <div class="row quality">
-                                    <div class="col-xs-9"><div id="quality-slider" ></div></div>
+                                    <div class="col-xs-9"><div id="quality-slider"></div></div>
                                     <div class="col-xs-3"><?php echo $this->request->data['Setting']['quality'];?>kb/s</div>
                                 </div>
                             </div>
@@ -87,15 +121,14 @@
             <div class="row" style="margin-top: 20px;">
                 <div class="col-xs-6 text-center">
                     <a href="https://flattr.com/submit/auto?user_id=Sonerezh&url=https%3A%2F%2Fwww.sonerezh.bzh&title=Sonerezh" target="_blank" class="no-ajax">
-                        <img src="//api.flattr.com/button/flattr-badge-large.png" alt="Flattr this" title="Flattr this" border="0">
+                        <?php echo $this->Html->image('flattr-badge-large.png', array('alt' => 'Flattr this', 'title' => 'Flattr this'));?>
                     </a>
                 </div>
                 <div class="col-xs-6 text-center">
                     <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" class="no-ajax">
                         <input type="hidden" name="cmd" value="_s-xclick">
                         <input type="hidden" name="hosted_button_id" value="TWMJXGFUK8SXG">
-                        <input type="image" src="https://www.paypalobjects.com/fr_FR/FR/i/btn/btn_donate_SM.gif" border="0" name="submit" alt="PayPal - la solution de paiement en ligne la plus simple et la plus sécurisée !">
-                        <img alt="" border="0" src="https://www.paypalobjects.com/fr_FR/i/scr/pixel.gif" width="1" height="1">
+                        <?php echo $this->Form->submit("btn_donate_SM.gif", array('name' => 'submit', 'alt' => 'PayPal - la solution de paiement en ligne la plus simple et la plus sécurisée !'));?>
                     </form>
                 </div>
             </div>
